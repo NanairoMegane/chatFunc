@@ -1,0 +1,83 @@
+<html>
+    <head>
+        <title>
+            chatroom
+        </title>
+        <link rel="stylesheet"
+              href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+        <stile>
+            
+        </stile>
+    </head>
+    <body>
+        <!-- チャット表示スペース -->
+        <div>
+            <h3>Chat Func Test</h3>
+        </div>
+        <div class="container panel panel-default">
+            <div class="panel-heading">
+                ここにチャット内容が表示されます。
+            </div>
+            <div class="panel-body">
+                test
+                <ul id="messages"></ul>
+            </div>
+        </div>
+
+        <!-- 入力スペース -->
+        <div>
+            <form id="chatbox">
+                <div>
+                    <div>
+                        メッセージを入力
+                    </div>
+                    <textarea></textarea>
+                </div>
+                <input type="submit" value="送信" 
+                       class="btn btn-success" />                
+            </form>
+        </div>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js">
+        </script>
+        <script>
+            $(function(){
+                var socket   = null;
+                var msgbox   = $("#chatbox textarea");
+                var messages = $("#messages");
+                
+                /* 送信ボタン押下時の挙動 */
+                $("#chatbox").submit(function(){
+                    // エラーチェック
+                    if (!msgbox.val()) {
+                        alert("入力がありません。"); return false;
+                    }
+                    // socketにデータを送る
+                    socket.send(msgbox.val());
+                    msgbox.val("");
+                    return false;
+                });
+
+                // websocketの対応チェック
+                if(!window["WebSocket"]){
+                    alert("WebSocketに対応していないブラウザです。");
+                    return false;
+                } else {
+                    /* socketの開設 */
+                    socket = new WebSocket("ws://localhost:8080/room");
+
+                    // メッセージ受信時の処理
+                    socket.onmessage = function(e) {
+                        messages.append(
+                            $("<li>").text(e.data)
+                        );
+                    }
+
+                    // socket終了時の処理
+                    socket.onclose = function() {
+                        alert("websocket通信が終了しました。");
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
