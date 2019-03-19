@@ -24,7 +24,7 @@ var upgrader = &websocket.Upgrader{
 チャットルーム・モデル
 */
 type chatroom struct {
-	forward chan []byte
+	forward chan *message
 	join    chan *client
 	leave   chan *client
 	clients map[*client]bool
@@ -47,7 +47,7 @@ func (c *chatroom) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	/* クライアントの生成 */
 	client := &client{
 		socket: socket,
-		send:   make(chan []byte, messageBufferSize),
+		send:   make(chan *message, messageBufferSize),
 		room:   c,
 	}
 
@@ -69,7 +69,7 @@ func newRoom() *chatroom {
 	layout := "2006-01-02 15:04:05"
 	fmt.Println("chatroom が生成されました。:", t.Format(layout))
 	return &chatroom{
-		forward: make(chan []byte),
+		forward: make(chan *message),
 		join:    make(chan *client),
 		leave:   make(chan *client),
 		clients: make(map[*client]bool),
@@ -102,8 +102,7 @@ func (c *chatroom) run() {
 
 		/* forwardチャネルに動きがあった場合(メッセージの受信) */
 		case msg := <-c.forward:
-			fmt.Printf("メッセージを受信しました。 : %s\n", msg)
-			fmt.Printf("全てのクライアントへメッセージを送信します。\n")
+			fmt.Println("メッセージを受信しました。")
 			// 存在するクライアント全てに対してメッセージを送信する
 			for target := range c.clients {
 				select {

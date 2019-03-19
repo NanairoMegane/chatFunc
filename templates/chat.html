@@ -5,21 +5,20 @@
         </title>
         <link rel="stylesheet"
               href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-        <stile>
-            
-        </stile>
+        <style>
+            #name{margin-bottom:10px}
+        </style>
     </head>
     <body>
         <!-- チャット表示スペース -->
         <div>
             <h3>Chat Func Test</h3>
         </div>
-        <div class="container panel panel-default">
+        <div class="container panel panel-info">
             <div class="panel-heading">
                 ここにチャット内容が表示されます。
             </div>
             <div class="panel-body">
-                test
                 <ul id="messages"></ul>
             </div>
         </div>
@@ -29,9 +28,18 @@
             <form id="chatbox">
                 <div>
                     <div>
-                        メッセージを入力
+                        <div>
+                            <text>Name</text>
+                        </div>
+                        <input type="text" name="name" size="20" id="name" class="text">
                     </div>
-                    <textarea></textarea>
+                    <div>
+                        <div>
+                            <text>Input Message</text>
+                        </div>
+                        <textarea class="text"></textarea>
+                    </div>
+
                 </div>
                 <input type="submit" value="送信" 
                        class="btn btn-success" />                
@@ -42,6 +50,7 @@
         <script>
             $(function(){
                 var socket   = null;
+                var name     = $("#name");
                 var msgbox   = $("#chatbox textarea");
                 var messages = $("#messages");
                 
@@ -52,7 +61,10 @@
                         alert("入力がありません。"); return false;
                     }
                     // socketにデータを送る
-                    socket.send(msgbox.val());
+                    socket.send(JSON.stringify({
+                        "Message": msgbox.val(),
+                        "Name": name.val()
+                    }));
                     msgbox.val("");
                     return false;
                 });
@@ -67,14 +79,20 @@
 
                     // メッセージ受信時の処理
                     socket.onmessage = function(e) {
+                        var msg = eval("("+e.data+")");
                         messages.append(
-                            $("<li>").text(e.data)
+                            $("<li>").append(
+                                $("<strong>").text(msg.Name + " :"),
+                                $("<p>").text("---->   " + msg.Message).append(
+                                        "      " + "<time>(" + msg.Time + ")</time>"
+                                )
+                            )
                         );
                     }
 
                     // socket終了時の処理
                     socket.onclose = function() {
-                        alert("websocket通信が終了しました。");
+                        //alert("websocket通信が終了しました。");
                     }
                 }
             });
