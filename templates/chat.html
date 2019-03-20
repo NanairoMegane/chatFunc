@@ -39,45 +39,32 @@
                         </div>
                         <textarea class="text"></textarea>
                     </div>
-
                 </div>
                 <input type="submit" value="送信" 
                        class="btn btn-success" />                
             </form>
         </div>
+        
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js">
         </script>
         <script>
             $(function(){
                 var socket   = null;
-                var name     = $("#name");
-                var msgbox   = $("#chatbox textarea");
-                var messages = $("#messages");
-                
-                /* 送信ボタン押下時の挙動 */
-                $("#chatbox").submit(function(){
-                    // エラーチェック
-                    if (!msgbox.val()) {
-                        alert("入力がありません。"); return false;
-                    }
-                    // socketにデータを送る
-                    socket.send(JSON.stringify({
-                        "Message": msgbox.val(),
-                        "Name": name.val()
-                    }));
-                    msgbox.val("");
-                    return false;
-                });
+                var name     = $("#name");              // 入力された名前
+                var msgbox   = $("#chatbox textarea");  // 入力されたメッセージ
+                var messages = $("#messages");          // チャット表示スペース
 
-                // websocketの対応チェック
-                if(!window["WebSocket"]){
+                 /* 初回起動時の処理 */
+                 // websocket未対応のブラウザであれば、チャット機能は使えない
+                 if(!window["WebSocket"]){
                     alert("WebSocketに対応していないブラウザです。");
                     return false;
+                // websocketに対応しているブラウザの場合
                 } else {
                     /* socketの開設 */
                     socket = new WebSocket("ws://localhost:8080/room");
 
-                    // メッセージ受信時の処理
+                    // メッセージ受信時の処理を実装
                     socket.onmessage = function(e) {
                         var msg = eval("("+e.data+")");
                         messages.append(
@@ -90,11 +77,31 @@
                         );
                     }
 
-                    // socket終了時の処理
+                    // socket終了時の処理を実装
                     socket.onclose = function() {
                         //alert("websocket通信が終了しました。");
                     }
-                }
+                }              
+
+                /* 送信ボタン押下時の挙動 */
+                $("#chatbox").submit(function(){
+                    // エラーチェック
+                    if (!msgbox.val()) {
+                        alert("入力がありません。"); return false;
+                    }
+                    if (!socket){
+                        alert("websocketに対応していません。"); return false;                        
+                    }
+
+                    /* socketにデータを送る */
+                    socket.send(JSON.stringify({
+                        "Message": msgbox.val(), // 入力されたメッセージ
+                        "Name": name.val()       // 入力された名前
+                    }));
+                    // メッセージボックスはリセットする
+                    msgbox.val("");
+                    return false;
+                });
             });
         </script>
     </body>
